@@ -107,7 +107,7 @@ saveRDS(usa_index,"usa_index.rds")
 
 # 
 
-p2 <- ggplot(rbind(wc_north_index, wc_south_index, bc_index), aes(year, est, col = type, fill = type)) + 
+p1 <- ggplot(rbind(wc_north_index, wc_south_index, bc_index), aes(year, est, col = type, fill = type)) + 
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha=0.6, col=NA) + 
   geom_line() + 
   scale_fill_viridis_d(option="magma", begin = 0.2, end = 0.8, name = "Index") + 
@@ -115,7 +115,46 @@ p2 <- ggplot(rbind(wc_north_index, wc_south_index, bc_index), aes(year, est, col
   theme_bw() + 
   ylab("Estimate") + 
   xlab("Year")
-ggsave(p2, filename = "Indices_2003_2023.png", width=7, height=5)
+ggsave(p1, filename = "Indices_2003_2023.png", width=7, height=5)
 
+library(readr)
 
+url <- "https://raw.githubusercontent.com/pacific-hake/hake-assessment/master/data-tables/survey-by-country.csv"
+acoustic <- read_csv(url, skip=2) # skip 2 lines, comments
+acoustic <- dplyr::select(acoustic, year, total) |>
+  dplyr::rename(est = total) |>
+  dplyr::mutate(lwr = NA, upr = NA, survey = "Acoustic")
+
+wctbs <- readRDS("hake_case_study/coastwide_index.rds") |>
+  dplyr::select(year, est, lwr, upr) |>
+  dplyr::mutate(survey="Coastwide trawl")
+
+# scale acoustic to be on same mean in 2003
+cnst <- as.numeric(acoustic[acoustic$year==2003,"est"])
+acoustic$est <- acoustic$est / cnst
+acoustic$lwr <- acoustic$lwr / cnst
+acoustic$upr <- acoustic$upr / cnst
+
+cnst <- as.numeric(wctbs[wctbs$year==2003,"est"])
+wctbs$est <- wctbs$est / cnst
+wctbs$lwr <- wctbs$lwr / cnst
+wctbs$upr <- wctbs$upr / cnst
+
+indices <- rbind(acoustic, wctbs)
+
+p2 <- ggplot(dplyr::filter(indices,year>=2003), aes(year, est, group=survey)) + 
+  geom_ribbon(aes(ymin=lwr,ymax=upr, fill = survey), alpha=0.3) + 
+  geom_line(aes(col = survey),alpha=0.6) +
+  geom_point(aes(col=survey),alpha=0.6) + 
+  xlab("Year") + ylab("Scaled estimate") + 
+  scale_color_viridis_d(option="magma", begin=0.3, end=0.8) + 
+  scale_fill_viridis_d(option="magma", begin=0.3, end=0.8) + 
+  theme_bw()
+
+ggsave("plots/trawl_acoustic_comparison.png")
+
+library(cowplot)
+p3 <- plot_grid(p1, p2, ncol = 1, align = "v")
+
+ggsave("combined_plot.png")
 ```
