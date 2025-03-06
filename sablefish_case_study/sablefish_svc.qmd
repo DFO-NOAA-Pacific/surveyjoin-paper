@@ -145,11 +145,15 @@ place_labels <- data.frame(
 
 
 p1 <- ggplot(coast_proj) + 
+  geom_sf(fill="grey10", col = "grey20") + 
   geom_point(data = pred, aes(X,Y, col = zeta_s_year_scaled1+zeta_s_year_scaled2+z1+z2),size=0.1) +
   scale_color_gradient2(name = "Annual trend", low = "red", high = "blue") +
+<<<<<<< HEAD
   xlim(min(pred$X),max(pred$X)) +
   ylim(min(pred$Y),max(pred$Y)+250000) +
   geom_sf(fill="grey10") +
+=======
+>>>>>>> fd8202e6621a30d4f2569daa1b9fabd4c96690fb
   theme_bw() +
   labs(x = "Longitude (\u00B0W)", y = "Latitude (\u00B0N)")
 p1 <- p1 + ggplot2::geom_sf_text(
@@ -160,13 +164,18 @@ p1 <- p1 + ggplot2::geom_sf_text(
     show.legend = FALSE)
 
 p2 <- ggplot(coast_proj) + 
+  geom_sf(fill="grey10", col = "grey20") +
   geom_point(data = pred, aes(X,Y, col = est_non_rf1 + omega_s1 + est_non_rf2 + omega_s2),size=0.1) +
   scale_color_gradient2(name = "Intercept", low = "red", high = "blue") +
+<<<<<<< HEAD
   xlim(min(pred$X),max(pred$X)) +
   ylim(min(pred$Y),max(pred$Y)+250000) +
   geom_sf(fill="grey10") +
+=======
+>>>>>>> fd8202e6621a30d4f2569daa1b9fabd4c96690fb
   theme_bw() +
   labs(x = "Longitude (\u00B0W)", y = "Latitude (\u00B0N)")
+
 p2 <- p2 + ggplot2::geom_sf_text(
     data = place_labels %>% dplyr::filter(type == "mainland", lab!="Russia"),
     mapping = aes(label = lab, angle = angle),
