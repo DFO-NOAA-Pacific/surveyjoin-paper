@@ -146,7 +146,7 @@ p1 <- ggplot(coast_proj) +
   scale_color_gradient2(name = "Annual trend", low = "red", high = "blue") +
   geom_sf(fill="grey10") +
   theme_bw() +
-  labs(x = "Longitude", y = "Latitude")
+  labs(x = "Longitude (\u00B0W)", y = "Latitude (\u00B0N)")
 p1 <- p1 + ggplot2::geom_sf_text(
     data = place_labels %>% dplyr::filter(type == "mainland", lab!="Russia"),
     mapping = aes(label = lab, angle = angle),
@@ -159,7 +159,7 @@ p2 <- ggplot(coast_proj) +
   scale_color_gradient2(name = "Intercept", low = "red", high = "blue") +
   geom_sf(fill="grey10") +
   theme_bw() +
-  labs(x = "Longitude", y = "Latitude")
+  labs(x = "Longitude (\u00B0W)", y = "Latitude (\u00B0N)")
 p2 <- p2 + ggplot2::geom_sf_text(
     data = place_labels %>% dplyr::filter(type == "mainland", lab!="Russia"),
     mapping = aes(label = lab, angle = angle),
