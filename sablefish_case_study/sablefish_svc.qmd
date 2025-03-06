@@ -15,6 +15,7 @@ library(surveyjoin)
 library(sdmTMB)
 library(tidyr)
 library(dplyr)
+library(ggplot2)
 
 if(!file.exists("data_for_modelling_sablefish.rds")) {
   d <- get_data()
@@ -72,8 +73,10 @@ fit <- sdmTMB(cpue ~ year_scaled,
               time = "year",
               family = delta_lognormal(type = "poisson-link"))
 sanity(fit) # passes all sanity checks
-}
 saveRDS(fit, "fitted_models_sablefish.rds")
+} else {
+  fit <- readRDS("fitted_models_sablefish.rds")
+}
 ```
 
 ## Predictions
@@ -112,10 +115,10 @@ pred <- cbind(pred, sf::st_coordinates(pred))
 
 map_data <- rnaturalearth::ne_countries(
   scale = "medium",
-  returnclass = "sf", country = c("united states of america","canada"))
+  returnclass = "sf", country = c("united states of america","canada","mexico"))
 coast <- suppressWarnings(suppressMessages(
   sf::st_crop(map_data,
-    c(xmin = -179, ymin = 32, xmax = -114, ymax = 60))))
+    c(xmin = -179, ymin = 15, xmax = -80, ymax = 70))))
 coast_proj <- sf::st_transform(coast, crs = crs_out)
 
 # Get the intercepts from the main effects part of the model
@@ -144,6 +147,8 @@ place_labels <- data.frame(
 p1 <- ggplot(coast_proj) + 
   geom_point(data = pred, aes(X,Y, col = zeta_s_year_scaled1+zeta_s_year_scaled2+z1+z2),size=0.1) +
   scale_color_gradient2(name = "Annual trend", low = "red", high = "blue") +
+  xlim(min(pred$X),max(pred$X)) +
+  ylim(min(pred$Y),max(pred$Y)+250000) +
   geom_sf(fill="grey10") +
   theme_bw() +
   labs(x = "Longitude (\u00B0W)", y = "Latitude (\u00B0N)")
@@ -157,6 +162,8 @@ p1 <- p1 + ggplot2::geom_sf_text(
 p2 <- ggplot(coast_proj) + 
   geom_point(data = pred, aes(X,Y, col = est_non_rf1 + omega_s1 + est_non_rf2 + omega_s2),size=0.1) +
   scale_color_gradient2(name = "Intercept", low = "red", high = "blue") +
+  xlim(min(pred$X),max(pred$X)) +
+  ylim(min(pred$Y),max(pred$Y)+250000) +
   geom_sf(fill="grey10") +
   theme_bw() +
   labs(x = "Longitude (\u00B0W)", y = "Latitude (\u00B0N)")
