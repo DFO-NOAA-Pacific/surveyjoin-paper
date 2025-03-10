@@ -125,7 +125,7 @@ acoustic <- dplyr::select(acoustic, year, total) |>
   dplyr::rename(est = total) |>
   dplyr::mutate(lwr = NA, upr = NA, survey = "Acoustic")
 
-wctbs <- readRDS("hake_case_study/coastwide_index.rds") |>
+wctbs <- readRDS("coastwide_index.rds") |>
   dplyr::select(year, est, lwr, upr) |>
   dplyr::mutate(survey="Coastwide trawl")
 
@@ -145,10 +145,10 @@ indices <- rbind(acoustic, wctbs)
 p2 <- ggplot(dplyr::filter(indices,year>=2003), aes(year, est, group=survey)) + 
   geom_ribbon(aes(ymin=lwr,ymax=upr, fill = survey), alpha=0.3) + 
   geom_line(aes(col = survey),alpha=0.6) +
-  geom_point(aes(col=survey),alpha=0.6) + 
+  geom_point(aes(col=survey),alpha=0.6, size=2) + 
   xlab("Year") + ylab("Scaled estimate") + 
-  scale_color_viridis_d(option="magma", begin=0.3, end=0.8) + 
-  scale_fill_viridis_d(option="magma", begin=0.3, end=0.8) + 
+  scale_color_viridis_d(begin=0.2, end=0.85) + 
+  scale_fill_viridis_d(begin=0.2, end=0.85) + 
   theme_bw()
 
 ggsave("plots/trawl_acoustic_comparison.png")
@@ -156,5 +156,5 @@ ggsave("plots/trawl_acoustic_comparison.png")
 library(cowplot)
 p3 <- plot_grid(p1, p2, ncol = 1, align = "v")
 
-ggsave("combined_plot.png")
+ggsave(p3, filename="combined_plot.png")
 ```
