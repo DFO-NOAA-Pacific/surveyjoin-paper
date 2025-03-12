@@ -21,7 +21,7 @@ library(rnaturalearthhires)
 #devtools::install_github("ropensci/rnaturalearthhires")
 
 
-Data = readRDS("dfa_data_origplus_fullcoast_Feb2025.rds") 
+Data = readRDS("dfa_data_origplus_fullcoast_Feb2025.rds")
 
 # Subset data
 
@@ -79,7 +79,7 @@ names(family) = unique(Data0$common_name)
     control = tinyVASTcontrol( profile = "alpha_j",
                                trace = 1,
                                getsd = FALSE ),
- 
+
       family = list(
         "pacific_ocean_perch" = tweedie(),
        #  "walleye_pollock" = tweedie(),
@@ -104,12 +104,12 @@ names(family) = unique(Data0$common_name)
   # Ordination
   dens = predict( fit, newdata=DF, what="p_g" )
  dens = matrix(dens, dimnames=list(NULL,"name")) #added "name" as placeholder to replace early and late time period names
-  
+
   DF = cbind( DF, dens )
-  
+
   Y_gc = matrix( DF$name, nrow=nrow(grid), ncol=length(unique(Data0$common_name)),
                  dimnames = list(NULL,unique(Data0$common_name)) )
- 
+
 #
 Hclust = hclust.vector( Y_gc, method="ward" )
 
@@ -119,7 +119,7 @@ Class_g = cutree( Hclust, k = k )
 Class_gz = model.matrix( ~ 0 + factor(Class_g) )
 pmean_gz = (t(Y_gc) %*% Class_gz) / nrow(Y_gc)
 
-#name for plot 
+#name for plot
 rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P.ocean perch",  "Sablefish", "Dover sole", "English sole","Lingcod")
 
 #png( "Orig.modplusK3.Feb25.png", width=4, height=5, res=900, units="in" )
@@ -137,10 +137,118 @@ rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P
 
   ##
   par(mar=c(3,1,3.5,1)) #mar B,L,T,R
-  
+
   matplot( y=pmean_gz, xlab="", xaxt="n",yaxt="n", type="l", lwd=2, col=viridis(k), lty="solid" )
 
   axis(1, at=1:nrow(pmean_gz), labels=rnames, las=3, cex.axis=0.5,font.axis=1 )
   axis(2,cex.axis=0.5,font.axis=1 )
   mtext( side=2, text="Average log-density", line=2,cex=0.5 )
 #dev.off()
+
+
+  # This first plot is the map
+  # make sure sf_grid has a CRS
+  if (is.na(st_crs(sf_grid))) st_crs(sf_grid) <- 4326  # Assign EPSG:4326 if it's not set
+
+  # Transform sf_grid to EPSG:3338
+  sf_grid <- st_transform(sf_grid, crs = 3338)
+
+  # Ensure Land has CRS
+  if (is.na(st_crs(Land))) {
+    st_crs(Land) <- 4326  # if missing
+  } else {
+    Land <- st_transform(Land, 4326)  # If it's already set, just transform it to EPSG:4326
+  }
+
+  # transform Land to EPSG:3338
+  Land <- st_transform(Land, crs = 3338)
+
+  # is assigned to sf_grid as before
+  plotgrid <- st_sf(sf_grid, Class = Class_g[1:length(sf_grid)])
+
+  # Define the place labels (you can adjust the lat/lon coordinates as needed)
+  place_labels <- data.frame(
+    type = c("mainland", "mainland", "mainland", "mainland", "survey",
+             "peninsula", "survey", "survey", "survey", "survey", "survey"),
+    lab = c("Alaska", "Russia", "Canada", "USA", "West Coast",
+            "Alaska Peninsula", "Aleutian Islands", "Gulf of Alaska",
+            "Bering\nSea\nSlope", "Eastern\nBering Sea", "Northern\nBering Sea"),
+    angle = c(0, 0, 0, 0, -45, 45, 0, 30, 0, 0, 0),
+    lat = c(63, 61.798276, 58, 42, 40, 56.352495, 53.25, 54.720787,
+            57, 57.456912, 62.25),
+    lon = c(-154, 173.205231, -122, -120, -125.2,
+            -159.029430, -173, -154.794131, -176, -162, -170.5)
+  ) %>%
+    dplyr::filter(type != "peninsula") %>%
+    sf::st_as_sf(coords = c("lon", "lat"),
+                 crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0") %>%
+    sf::st_transform(crs = 3338)  # Transform labels to the same CRS (EPSG:3338)
+
+  # I don't know we need the bbox_geo -- this was pulled in from some other plots
+  bbox_geo <- c(xmin = -175, ymin = 32, xmax = -115, ymax = 60)
+  # Create a bounding box in geographic coordinates (EPSG:4326)
+  bbox_sf <- st_sfc(
+    st_polygon(list(matrix(c(bbox_geo["xmin"], bbox_geo["ymin"],
+                             bbox_geo["xmin"], bbox_geo["ymax"],
+                             bbox_geo["xmax"], bbox_geo["ymax"],
+                             bbox_geo["xmax"], bbox_geo["ymin"],
+                             bbox_geo["xmin"], bbox_geo["ymin"]),
+                           ncol = 2, byrow = TRUE))),
+    crs = 4326
+  )
+
+  # Transform bounding box to EPSG:3338
+  bbox_sf_projected <- st_transform(bbox_sf, crs = 3338)
+
+  # Get the transformed bounding box extents in EPSG:3338
+  bbox_projected <- st_bbox(bbox_sf_projected)
+  bbox_projected$ymax <- bbox_projected$ymax + 250000 # this was in orig plot
+
+  # Convert to factor
+  plotgrid$Community <- as.factor(plotgrid$Class)
+
+  p1 <- ggplot() +
+    geom_sf(data = plotgrid, aes(fill = Community), color = NA) +  # Plot the grid with color mapped to Class
+    scale_fill_viridis_d(name = "Community") +  # Color scale from viridis
+    geom_sf(data = Land, fill = "grey10", color = NA) +  # Add land as a grey fill
+    theme_bw() +  # Use a minimal theme
+    labs(x = "Longitude (\u00B0W)", y = "Latitude (\u00B0N)") +
+    scale_x_continuous(breaks = seq(-180, 180, by = 10)) +
+    scale_y_continuous(breaks = seq(-90, 90, by = 10)) +
+    xlim(c(bbox_projected$xmin, bbox_projected$xmax)) +
+    ylim(c(bbox_projected$ymin, bbox_projected$ymax))
+
+  # Add place labels to p1 (same as before)
+  p1 <- p1 + ggplot2::geom_sf_text(
+    data = place_labels %>% dplyr::filter(type == "mainland", lab != "Russia"),
+    mapping = aes(label = lab, angle = angle),
+    color = "grey60",
+    size = 3,
+    show.legend = FALSE
+  )
+
+
+  # Second plot here,
+  # Convert pmean_gz into a data frame with 'x' as the row index and 'y' as the data
+  df <- data.frame(
+    x = 1:nrow(pmean_gz),
+    y = as.vector(pmean_gz),  # Flatten pmean_gz for y-axis
+    group = rep(1:ncol(pmean_gz), each = nrow(pmean_gz))  # Create a group for each column of pmean_gz
+  )
+
+  # Create a ggplot line plot
+  p2 <- ggplot(df, aes(x = x, y = y, group = group, color = factor(group))) +
+    geom_line(lwd = 2) +  # Line width and color
+    scale_color_viridis(discrete = TRUE, name = "Community") +
+    theme_bw() +
+    labs(x = NULL,
+      y = "Average log-density"
+    ) +
+    scale_x_continuous(
+      breaks = 1:nrow(pmean_gz),  # x-axis ticks at each row of pmean_gz
+      labels = rnames,  # row names as x-axis labels
+      expand = c(0, 0)  # remove extra space on the left and right
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 1)  # Rotate x-axis labels
+    )
