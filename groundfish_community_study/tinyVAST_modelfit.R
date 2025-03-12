@@ -281,4 +281,4 @@ Class_g <- readRDS("Class_g.rds")
                   axis = "lr",
                   rel_heights = c(2,1))
 
-  ggsave(p3, filename="groundfish_community_study/combined_plot.png",height=7,width=6, bg = "white")
+  ggsave(p3, filename="combined_plot.png",height=7,width=6, bg = "white")
