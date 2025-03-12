@@ -145,8 +145,12 @@ rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P
 #   axis(2,cex.axis=0.5,font.axis=1 )
 #   mtext( side=2, text="Average log-density", line=2,cex=0.5 )
 # #dev.off()
+rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P.ocean perch",  "Sablefish", "Dover sole", "English sole","Lingcod")
 
 
+sf_grid <- readRDS("sf_grid.rds")
+plotgrid <- readRDS("plotgrid.rds")
+Class_g <- readRDS("Class_g.rds")
   # This first plot is the map
   # make sure sf_grid has a CRS
   if (is.na(st_crs(sf_grid))) st_crs(sf_grid) <- 4326  # Assign EPSG:4326 if it's not set
@@ -155,14 +159,14 @@ rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P
   sf_grid <- st_transform(sf_grid, crs = 3338)
 
   # Ensure Land has CRS
-  if (is.na(st_crs(Land))) {
-    st_crs(Land) <- 4326  # if missing
-  } else {
-    Land <- st_transform(Land, 4326)  # If it's already set, just transform it to EPSG:4326
-  }
+  #if (is.na(st_crs(Land))) {
+  #  st_crs(Land) <- 4326  # if missing
+  #} else {
+  #  Land <- st_transform(Land, 4326)  # If it's already set, just transform it to EPSG:4326
+  #}
 
   # transform Land to EPSG:3338
-  Land <- st_transform(Land, crs = 3338)
+  #Land <- st_transform(Land, crs = 3338)
 
   # is assigned to sf_grid as before
   plotgrid <- st_sf(sf_grid, Class = Class_g[1:length(sf_grid)])
@@ -228,7 +232,7 @@ rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P
              ylim = c(bbox_projected$ymin, bbox_projected$ymax))  # Apply the bounding box
 
   # Add place labels to p1 (same as before)
-  p1 + ggplot2::geom_sf_text(
+  p1 <- p1 + ggplot2::geom_sf_text(
     data = place_labels %>% dplyr::filter(type == "mainland", lab != "Russia"),
     mapping = aes(label = lab, angle = angle),
     color = "grey60",
