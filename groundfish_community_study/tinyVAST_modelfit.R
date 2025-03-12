@@ -207,25 +207,40 @@ rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P
   # Convert to factor
   plotgrid$Community <- as.factor(plotgrid$Class)
 
-  p1 <- ggplot() +
-    geom_sf(data = plotgrid, aes(fill = Community), color = NA) +  # Plot the grid with color mapped to Class
-    scale_fill_viridis_d(name = "Community") +  # Color scale from viridis
-    geom_sf(data = Land, fill = "grey10", color = NA) +  # Add land as a grey fill
-    theme_bw() +  # Use a minimal theme
+  map_data <- rnaturalearth::ne_countries(
+    scale = "medium",
+    returnclass = "sf", country = c("united states of america","canada","mexico"))
+  coast <- suppressWarnings(suppressMessages(
+    sf::st_crop(map_data,
+                c(xmin = -179, ymin = 15, xmax = -80, ymax = 70))))
+  coast_proj <- sf::st_transform(coast, crs = "EPSG:3338")
+
+  p1 <- ggplot(coast_proj) +
+    geom_sf(fill="grey10", col = "grey20") +
+    geom_sf(data = plotgrid, aes(fill = Community), color = NA) +
+    scale_fill_viridis_d(name = "Community") +
+    theme_bw() +
     labs(x = "Longitude (\u00B0W)", y = "Latitude (\u00B0N)") +
-    scale_x_continuous(breaks = seq(-180, 180, by = 10)) +
-    scale_y_continuous(breaks = seq(-90, 90, by = 10)) +
-    xlim(c(bbox_projected$xmin, bbox_projected$xmax)) +
-    ylim(c(bbox_projected$ymin, bbox_projected$ymax))
+    scale_x_continuous(breaks = seq(-180, 180, by = 10)) +  # Longitude gridlines every 10 degrees
+    scale_y_continuous(breaks = seq(-90, 90, by = 5)) +  # Latitude gridlines every 5 degrees
+    coord_sf(xlim = c(bbox_projected$xmin, bbox_projected$xmax),  # Apply the bounding box
+             ylim = c(bbox_projected$ymin, bbox_projected$ymax))  # Apply the bounding box
 
   # Add place labels to p1 (same as before)
-  p1 <- p1 + ggplot2::geom_sf_text(
+  p1 + ggplot2::geom_sf_text(
     data = place_labels %>% dplyr::filter(type == "mainland", lab != "Russia"),
     mapping = aes(label = lab, angle = angle),
     color = "grey60",
     size = 3,
     show.legend = FALSE
-  )
+  ) +
+    coord_sf(
+      xlim = c(bbox_projected$xmin, bbox_projected$xmax),
+      ylim = c(bbox_projected$ymin, bbox_projected$ymax),
+      expand = FALSE  #no additional padding around the plot
+    ) +
+    scale_x_continuous(breaks = seq(-180, 180, by = 10)) +  # Longitude gridlines every 10 degrees
+    scale_y_continuous(breaks = seq(-90, 90, by = 5))  # Latitude gridlines every 5 degrees
 
 
   # Second plot here,
