@@ -9,6 +9,7 @@ library(fmesher)
 library(ggplot2)
 library(sf)
 library(viridisLite)
+library(viridis)
 library(fastcluster)
 library("rnaturalearth")
 library(rnaturalearthhires)
@@ -20,8 +21,8 @@ library(rnaturalearthhires)
 #remotes::install_github("ropensci/rnaturalearthhires")
 #devtools::install_github("ropensci/rnaturalearthhires")
 
-
-Data = readRDS("dfa_data_origplus_fullcoast_Feb2025.rds")
+Data = readRDS("groundfish_community_study/dfa_data_origplus_fullcoast_Feb2025.RDS")
+#Data = readRDS("dfa_data_origplus_fullcoast_Feb2025.RDS")
 
 # Subset data
 
@@ -48,7 +49,7 @@ Data0$common_name = sapply(Data0$common_name, FUN=gsub, pattern=" ", replace="_"
   sf_locs = st_as_sf(Data0[,c('lon_start','lat_start')], coords=1:2)
   sf_polys = st_buffer( sf_locs, dist=0.2 )
   domain = st_union( sf_polys )
-  saveRDS( domain, file="domain.RDS" )
+  saveRDS( domain, file="groundfish_community_study/domain.RDS" )
 
 #
 Land = ne_countries( scale=10, continent = "North America")
@@ -276,4 +277,4 @@ rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P
                   axis = "lr",
                   rel_heights = c(2,1))
 
-  ggsave(p3, filename="combined_plot.png",height=7,width=6, bg = "white")
+  ggsave(p3, filename="groundfish_community_study/combined_plot.png",height=7,width=6, bg = "white")
