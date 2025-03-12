@@ -123,27 +123,27 @@ pmean_gz = (t(Y_gc) %*% Class_gz) / nrow(Y_gc)
 rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P.ocean perch",  "Sablefish", "Dover sole", "English sole","Lingcod")
 
 #png( "Orig.modplusK3.Feb25.png", width=4, height=5, res=900, units="in" )
-  par(mfrow=c(2,1), oma=c(4,2,0,0), mar=c(3,3,4,1), mgp=c(3,0.5,0), tck=-0.02) #mar B,L,T,R
-
-  plotgrid = st_sf( sf_grid, Class=Class_g[1:length(sf_grid)] )
-  plot( plotgrid, reset=FALSE, key.pos=NULL, border=NA, pal=viridis, main="" )
-  plot( Land, add=TRUE, col="grey" )
-  axis(side=2, cex.axis=0.5, font.axis=1)
-  axis(side=1, cex.axis=0.5, font.axis=1)
-  box()
-  cex.lab=3
-  mtext( side=2, text="Latitude (⁰N)", line=2, cex=0.5 )
-  mtext( side=1, text="Longitude (⁰W)", line=2, cex=0.5)
-
-  ##
-  par(mar=c(3,1,3.5,1)) #mar B,L,T,R
-
-  matplot( y=pmean_gz, xlab="", xaxt="n",yaxt="n", type="l", lwd=2, col=viridis(k), lty="solid" )
-
-  axis(1, at=1:nrow(pmean_gz), labels=rnames, las=3, cex.axis=0.5,font.axis=1 )
-  axis(2,cex.axis=0.5,font.axis=1 )
-  mtext( side=2, text="Average log-density", line=2,cex=0.5 )
-#dev.off()
+#   par(mfrow=c(2,1), oma=c(4,2,0,0), mar=c(3,3,4,1), mgp=c(3,0.5,0), tck=-0.02) #mar B,L,T,R
+#
+#   plotgrid = st_sf( sf_grid, Class=Class_g[1:length(sf_grid)] )
+#   plot( plotgrid, reset=FALSE, key.pos=NULL, border=NA, pal=viridis, main="" )
+#   plot( Land, add=TRUE, col="grey" )
+#   axis(side=2, cex.axis=0.5, font.axis=1)
+#   axis(side=1, cex.axis=0.5, font.axis=1)
+#   box()
+#   cex.lab=3
+#   mtext( side=2, text="Latitude (⁰N)", line=2, cex=0.5 )
+#   mtext( side=1, text="Longitude (⁰W)", line=2, cex=0.5)
+#
+#   ##
+#   par(mar=c(3,1,3.5,1)) #mar B,L,T,R
+#
+#   matplot( y=pmean_gz, xlab="", xaxt="n",yaxt="n", type="l", lwd=2, col=viridis(k), lty="solid" )
+#
+#   axis(1, at=1:nrow(pmean_gz), labels=rnames, las=3, cex.axis=0.5,font.axis=1 )
+#   axis(2,cex.axis=0.5,font.axis=1 )
+#   mtext( side=2, text="Average log-density", line=2,cex=0.5 )
+# #dev.off()
 
 
   # This first plot is the map
@@ -238,7 +238,7 @@ rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P
 
   # Create a ggplot line plot
   p2 <- ggplot(df, aes(x = x, y = y, group = group, color = factor(group))) +
-    geom_line(lwd = 2) +  # Line width and color
+    geom_line(lwd = 1.3) +  # Line width and color
     scale_color_viridis(discrete = TRUE, name = "Community") +
     theme_bw() +
     labs(x = NULL,
@@ -252,3 +252,13 @@ rnames=c("Arrowtooth fl.", "P.halibut", "Flathead sole", "P.cod", "Rex sole", "P
     theme(
       axis.text.x = element_text(angle = 90, hjust = 1, vjust = 1)  # Rotate x-axis labels
     )
+
+
+  library(cowplot)
+  p3 <- plot_grid(p1,p2,
+                  ncol = 1,
+                  align = "v",
+                  axis = "lr",
+                  rel_heights = c(2,1))
+
+  ggsave(p3, filename="combined_plot.png",height=7,width=6, bg = "white")
