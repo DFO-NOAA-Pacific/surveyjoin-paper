@@ -52,6 +52,7 @@ fit <- sdmTMB(cpue ~ 0 + fyear,
               data = d,
               time = "year",
               family = delta_gamma())
+saveRDS(rbind(tidy(fit), tidy(fit, "ran_pars")), "hake_case_study/tidied_pars.rds")
 sanity(fit) # passes all
 saveRDS(fit, "fitted_models/null.rds")
 ```
@@ -99,11 +100,11 @@ wc_north_index$type <- "West Coast USA (N of 42)"
 wc_south_index$type <- "West Coast USA (S of 42)"
 usa_index$type <- "West Coast of USA"
 
-saveRDS(coastwide_index,"coastwide_index.rds")
-saveRDS(bc_index,"bc_index_2003_2023.rds")
-saveRDS(wc_north_index,"wc_north_index_2003_2023.rds")
-saveRDS(wc_south_index,"wc_south_index_2003_2023.rds")
-saveRDS(usa_index,"usa_index.rds")
+saveRDS(coastwide_index,file = "coastwide_index.rds")
+saveRDS(bc_index,file = "bc_index_2003_2023.rds")
+saveRDS(wc_north_index,file = "wc_north_index_2003_2023.rds")
+saveRDS(wc_south_index,file = "wc_south_index_2003_2023.rds")
+saveRDS(usa_index,file = "usa_index.rds")
 
 # 
 
@@ -151,10 +152,10 @@ p2 <- ggplot(dplyr::filter(indices,year>=2003), aes(year, est, group=survey)) +
   scale_fill_viridis_d(begin=0.2, end=0.85) + 
   theme_bw()
 
-ggsave("plots/trawl_acoustic_comparison.png")
+ggsave("hake_case_study/trawl_acoustic_comparison.png")
 
 library(cowplot)
 p3 <- plot_grid(p1, p2, ncol = 1, align = "v")
 
-ggsave(p3, filename="combined_plot.png")
+ggsave(p3, filename="hake_case_study/combined_plot.png")
 ```
