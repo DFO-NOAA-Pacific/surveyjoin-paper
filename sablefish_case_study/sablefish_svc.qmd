@@ -27,9 +27,9 @@ if(!file.exists("data_for_modelling_sablefish.rds")) {
   # pacific ocean perch, sablefish, lingcod
   d <- dplyr::filter(alld, common_name == "sablefish")
   
-  saveRDS(d, "data_for_modelling_sablefish.rds")
+  saveRDS(d, "sablefish_case_study/data_for_modelling_sablefish.rds")
 }
-d <- readRDS("data_for_modelling_sablefish.rds")
+d <- readRDS("sablefish_case_study/data_for_modelling_sablefish.rds")
 ```
 
 ## Data cleaning
@@ -63,7 +63,7 @@ We'll include (1) a global intercept, (2) spatial field (representing the spatia
 
 ```{r}
 d$year_scaled <- as.numeric(scale(d$year))
-if(!file.exists("fitted_models_sablefish.rds")) {
+if(!file.exists("sablefish_case_study/fitted_models_sablefish.rds")) {
 fit <- sdmTMB(cpue ~ year_scaled,
               spatial="on",
               spatiotemporal = "off",
@@ -73,9 +73,10 @@ fit <- sdmTMB(cpue ~ year_scaled,
               time = "year",
               family = delta_lognormal(type = "poisson-link"))
 sanity(fit) # passes all sanity checks
-saveRDS(fit, "fitted_models_sablefish.rds")
+saveRDS(fit, "sablefish_case_study/fitted_models_sablefish.rds")
+saveRDS(rbind(tidy(fit), tidy(fit, "ran_pars")), file = "sablefish_case_study/tidied_pars.rds")
 } else {
-  fit <- readRDS("fitted_models_sablefish.rds")
+  fit <- readRDS("sablefish_case_study/fitted_models_sablefish.rds")
 }
 ```
 
